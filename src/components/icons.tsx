@@ -162,6 +162,34 @@ export function InboxIcon(props: IconProps) {
   )
 }
 
+export function TagIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12.6 3.2H19a1.8 1.8 0 0 1 1.8 1.8v6.4a2 2 0 0 1-.59 1.42l-6.99 6.99a2 2 0 0 1-2.83 0l-6.4-6.4a2 2 0 0 1 0-2.83l6.99-6.99a2 2 0 0 1 1.42-.59Z" />
+      <path d="M16.5 7.5h.01" />
+    </Base>
+  )
+}
+
+/** Mouse-only drag affordance on a task row. */
+export function GripIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={2.5} {...props}>
+      <path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01" />
+    </Base>
+  )
+}
+
+export function SlidersIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+      <circle cx="16" cy="7" r="2" />
+      <circle cx="10" cy="17" r="2" />
+    </Base>
+  )
+}
+
 export function SparkIcon(props: IconProps) {
   return (
     <Base strokeWidth={2} {...props}>
