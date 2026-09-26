@@ -78,6 +78,20 @@
   --shadow-1: 0 1px 2px rgba(16, 19, 32, 0.05), 0 1px 3px rgba(16, 19, 32, 0.05);
   --shadow-2: 0 4px 12px rgba(16, 19, 32, 0.06), 0 14px 32px rgba(16, 19, 32, 0.08);
   --shadow-3: 0 24px 60px rgba(16, 19, 32, 0.18);
+
+  /*
+    Category palette. Categories store the key, not the value, so each colour
+    can be re-picked per theme - these are chosen to clear 4.5:1 against
+    --surface, since they are used as text as well as a dot.
+  */
+  --cat-indigo: #4f46e5;
+  --cat-sky: #0369a1;
+  --cat-teal: #0f766e;
+  --cat-lime: #4d7c0f;
+  --cat-amber: #b45309;
+  --cat-rose: #be123c;
+  --cat-violet: #7e22ce;
+  --cat-slate: #475569;
 }
 
 [data-theme='dark'] {
@@ -109,6 +123,15 @@
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.35);
   --shadow-2: 0 4px 14px rgba(0, 0, 0, 0.45), 0 16px 36px rgba(0, 0, 0, 0.45);
   --shadow-3: 0 28px 70px rgba(0, 0, 0, 0.7);
+
+  --cat-indigo: #a5b4fc;
+  --cat-sky: #7dd3fc;
+  --cat-teal: #5eead4;
+  --cat-lime: #bef264;
+  --cat-amber: #fcd34d;
+  --cat-rose: #fda4af;
+  --cat-violet: #d8b4fe;
+  --cat-slate: #cbd5e1;
 }
 
 /* 2. BASE ================================================================= */
@@ -1780,4 +1803,391 @@ svg {
   margin-block-start: var(--sp-6);
   font-size: var(--fs-sm);
   color: var(--text-3);
+}
+
+/* ==========================================================================
+   CATEGORIES
+   --------------------------------------------------------------------------
+   Every category surface reads its colour from a local `--cat`, set inline
+   from the stored palette key. That keeps one set of rules for eight colours
+   and lets the theme swap the values underneath.
+   ========================================================================== */
+
+/* Chip rail --------------------------------------------------------------- */
+
+.catbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-block-end: var(--sp-5);
+  animation: rise-in 620ms var(--ease-out) 360ms backwards;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 2rem;
+  max-width: 14rem;
+  padding-inline: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  transition: border-color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease-out);
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--cat) 45%, transparent);
+  background: color-mix(in srgb, var(--cat) 12%, var(--surface));
+  color: var(--cat);
+}
+
+/* Drop feedback: the chip lifts and rings in its own colour. */
+.chip[data-drop='true'] {
+  border-color: var(--cat);
+  background: color-mix(in srgb, var(--cat) 18%, var(--surface));
+  color: var(--cat);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 25%, transparent);
+  transform: scale(1.05);
+}
+
+.chip__dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: var(--cat);
+}
+
+.chip__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip__count {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip--new {
+  border-style: dashed;
+  color: var(--text-3);
+}
+
+.chip--new:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.catbar__form {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: 2rem;
+  padding-inline: var(--sp-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.catbar__input {
+  width: 8.5rem;
+  min-width: 0;
+  border: none;
+  background: none;
+  font-size: var(--fs-sm);
+}
+
+.catbar__input:focus {
+  outline: none;
+}
+
+/* Grouped sections -------------------------------------------------------- */
+
+/*
+  The inline padding is cancelled by a matching negative margin, so the drop
+  highlight has room to breathe without the list shifting when it appears.
+*/
+.section {
+  padding: var(--sp-2);
+  margin-inline: calc(var(--sp-2) * -1);
+  border-radius: var(--r-lg);
+  transition: background-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+
+.section[data-drop='true'] {
+  background: color-mix(in srgb, var(--cat) 8%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cat) 35%, transparent);
+}
+
+.section__dot {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: var(--cat);
+}
+
+/* Task row ---------------------------------------------------------------- */
+
+/*
+  Mouse-only affordance: HTML drag-and-drop emits no events for touch, so the
+  handle is hidden there and the tag menu is the way to move a task.
+*/
+.task__grip {
+  display: grid;
+  place-items: center;
+  margin-block-start: 0.4rem;
+  color: var(--text-3);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease), color var(--dur-1) var(--ease);
+}
+
+.task:hover .task__grip,
+.task:focus-within .task__grip {
+  opacity: 0.55;
+}
+
+.task:hover .task__grip:hover {
+  opacity: 1;
+  color: var(--text-2);
+}
+
+.task__grip:active {
+  cursor: grabbing;
+}
+
+@media (hover: none) {
+  .task__grip {
+    display: none;
+  }
+}
+
+.task[data-dragging='true'] {
+  opacity: 0.4;
+}
+
+.task__cat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: none;
+  max-width: 9rem;
+  height: 1.25rem;
+  padding-inline: 0.45rem;
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--cat) 14%, transparent);
+  color: var(--cat);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task__cat .chip__dot {
+  width: 6px;
+  height: 6px;
+}
+
+.badge--cat {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Menu popover ------------------------------------------------------------ */
+
+.menu {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Lift the whole row, or the popover paints under the tasks below it. */
+.task:has(.menu[data-open='true']) {
+  z-index: 3;
+}
+
+.menu__pop {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  z-index: 20;
+  min-width: 11rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  padding: var(--sp-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  animation: pop-in var(--dur-2) var(--ease-out);
+}
+
+.menu__pop[data-align='end'] {
+  inset-inline-end: 0;
+}
+
+.menu__pop[data-align='start'] {
+  inset-inline-start: 0;
+}
+
+.menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 0.4rem var(--sp-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  text-align: start;
+  transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+
+.menu__item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.menu__item[aria-checked='true'] {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.menu__swatch {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: var(--swatch);
+}
+
+.menu__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Manager modal ----------------------------------------------------------- */
+
+.cat-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--cat);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.cat-row__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.cat-row__name {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem var(--sp-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: none;
+  font-weight: 600;
+}
+
+.cat-row__name:hover {
+  border-color: var(--border);
+}
+
+.cat-row__name:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.swatch {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: none;
+  border-radius: var(--r-full);
+  background: var(--swatch);
+  opacity: 0.45;
+  transition: opacity var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease);
+}
+
+.swatch:hover {
+  opacity: 0.85;
+}
+
+.swatch[aria-checked='true'] {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--swatch);
+}
+
+.cat-add {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.cat-add__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem var(--sp-3);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+}
+
+.cat-add__input:focus {
+  outline: none;
+  border-style: solid;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.cat-add__input:disabled {
+  opacity: 0.6;
+}
+
+@media (max-width: 34rem) {
+  .catbar__input {
+    width: 6.5rem;
+  }
+
+  .chip {
+    max-width: 11rem;
+  }
 }

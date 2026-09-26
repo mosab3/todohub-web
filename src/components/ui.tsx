@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import { Toaster } from 'react-hot-toast'
-import { CloseIcon, EmptyArt } from './icons'
+import { CheckIcon, CloseIcon, EmptyArt } from './icons'
 
 /* Button ------------------------------------------------------------------ */
 
@@ -36,6 +36,116 @@ export function IconButton({ label, danger = false, className = '', type = 'butt
       title={label}
       {...rest}
     />
+  )
+}
+
+/* Menu -------------------------------------------------------------------- */
+
+interface MenuProps {
+  /** Accessible name for the icon-only trigger. */
+  label: string
+  icon: ReactNode
+  /** Receives a `close` callback so an item can dismiss the menu after acting. */
+  children: (close: () => void) => ReactNode
+  className?: string
+  /** Which edge the popover aligns to. Flips with writing direction. */
+  align?: 'start' | 'end'
+}
+
+/**
+ * Small popover menu anchored to an icon button.
+ *
+ * Dismissal is handled three ways because each covers a case the others miss:
+ * a pointerdown outside (mouse), `focusout` to an element outside (keyboard and
+ * screen readers), and Escape (both). No portal is used, so the popover stays
+ * inside the row it belongs to and inherits the writing direction.
+ */
+export function Menu({ label, icon, children, className = '', align = 'end' }: MenuProps) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  const close = () => setOpen(false)
+
+  useEffect(() => {
+    if (!open) return
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setOpen(false)
+      // Escape should land the user back on the trigger, not nowhere.
+      rootRef.current?.querySelector<HTMLButtonElement>('.menu__trigger')?.focus()
+    }
+
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div
+      className={`menu ${className}`.trim()}
+      ref={rootRef}
+      data-open={open}
+      // React's onBlur is delegated from `focusout`, so it bubbles from the
+      // trigger and the items alike - one handler covers the whole popover.
+      onBlur={(event) => {
+        if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false)
+      }}
+    >
+      <IconButton
+        className="menu__trigger"
+        label={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {icon}
+      </IconButton>
+      {open ? (
+        <div className="menu__pop" role="menu" data-align={align}>
+          {children(close)}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+interface MenuItemProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** Shows a check and marks the item as the current choice. */
+  selected?: boolean
+  /** Small colour swatch shown before the label. */
+  swatch?: string
+}
+
+export function MenuItem({
+  selected = false,
+  swatch,
+  className = '',
+  children,
+  ...rest
+}: MenuItemProps) {
+  return (
+    <button
+      type="button"
+      role="menuitemradio"
+      aria-checked={selected}
+      className={`menu__item ${className}`.trim()}
+      {...rest}
+    >
+      <span
+        className="menu__swatch"
+        style={{ '--swatch': swatch ?? 'var(--border-strong)' } as CSSProperties}
+        aria-hidden="true"
+      />
+      <span className="menu__label">{children}</span>
+      {selected ? <CheckIcon size={14} /> : null}
+    </button>
   )
 }
 
@@ -137,7 +247,14 @@ function useCountUp(target: number, duration = 650): number {
   return value
 }
 
-export function Progress({ done, total }: { done: number; total: number }) {
+interface ProgressProps {
+  done: number
+  total: number
+  /** Names the filtered slice the numbers describe, e.g. "Work". */
+  scope?: string
+}
+
+export function Progress({ done, total, scope }: ProgressProps) {
   const pct = total === 0 ? 0 : Math.round((done / total) * 100)
   const displayed = useCountUp(pct)
   // Starts at 0 so the ring sweeps up to its value on first paint.
@@ -150,11 +267,11 @@ export function Progress({ done, total }: { done: number; total: number }) {
 
   const complete = total > 0 && done === total
 
-  let label = 'Nothing on the list yet'
+  let label = scope ? `Nothing in ${scope} yet` : 'Nothing on the list yet'
   let sub = 'Add your first task to get going.'
 
   if (total > 0) {
-    label = `${done} of ${total} done`
+    label = scope ? `${done} of ${total} done in ${scope}` : `${done} of ${total} done`
     if (complete) {
       sub = 'Everything is done. Enjoy the quiet.'
     } else if (done === 0) {

@@ -3,7 +3,7 @@ import { Scanner } from '@yudiel/react-qr-scanner'
 import { QRCodeCanvas } from 'qrcode.react'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, InboxIcon, QrIcon, ScanIcon } from './icons'
-import { normalizeTodos, type Todo } from './todos'
+import { normalizeSharedTodos, type Category, type SharedTodo, type Todo } from './todos'
 import { Button, Modal } from './ui'
 
 type Mode = 'choose' | 'send' | 'receive'
@@ -19,19 +19,23 @@ interface ShareModalProps {
   open: boolean
   onClose: () => void
   todos: Todo[]
-  onImport: (todos: Todo[]) => void
+  categories: Category[]
+  onImport: (todos: SharedTodo[]) => void
 }
 
 /**
  * Moves a list between devices with a QR code.
  *
- * Only `text`, `checked` and nested `subtasks` travel in the payload: internal
- * ids would bloat a capacity-limited symbol for no benefit, since the receiver
- * normalizes whatever it reads.
+ * Only `text`, `checked`, `cat` and nested `subtasks` travel in the payload:
+ * internal ids would bloat a capacity-limited symbol for no benefit, since the
+ * receiver normalizes whatever it reads. `cat` carries the category *name*
+ * rather than its id, because ids are local to one browser - and it is omitted
+ * entirely for uncategorised tasks, which keeps the payload byte-identical to
+ * what older builds produced and read.
  */
-export function ShareModal({ open, onClose, todos, onImport }: ShareModalProps) {
+export function ShareModal({ open, onClose, todos, categories, onImport }: ShareModalProps) {
   const [mode, setMode] = useState<Mode>('choose')
-  const [scanned, setScanned] = useState<Todo[]>([])
+  const [scanned, setScanned] = useState<SharedTodo[]>([])
   // Rate-limits the "not a TodoHub code" toast - the camera decodes the same
   // stranger's QR code many times per second.
   const lastRejectAt = useRef(0)
@@ -44,15 +48,22 @@ export function ShareModal({ open, onClose, todos, onImport }: ShareModalProps) 
     }
   }, [open])
 
+  const categoryName = (categoryId: string | null) =>
+    categories.find((category) => category.id === categoryId)?.name
+
   const payload = JSON.stringify(
-    todos.map(({ text, checked, subtasks }) => ({
-      text,
-      checked,
-      subtasks: subtasks.map(({ text: subText, checked: subChecked }) => ({
-        text: subText,
-        checked: subChecked,
-      })),
-    })),
+    todos.map(({ text, checked, subtasks, categoryId }) => {
+      const cat = categoryName(categoryId)
+      return {
+        text,
+        checked,
+        ...(cat ? { cat } : {}),
+        subtasks: subtasks.map(({ text: subText, checked: subChecked }) => ({
+          text: subText,
+          checked: subChecked,
+        })),
+      }
+    }),
   )
   const payloadBytes = new TextEncoder().encode(payload).length
   const tooBig = payloadBytes > QR_BYTE_LIMIT
@@ -73,9 +84,9 @@ export function ShareModal({ open, onClose, todos, onImport }: ShareModalProps) 
     const raw = codes[0]?.rawValue
     if (!raw) return
 
-    let parsed: Todo[] = []
+    let parsed: SharedTodo[] = []
     try {
-      parsed = normalizeTodos(JSON.parse(raw))
+      parsed = normalizeSharedTodos(JSON.parse(raw))
     } catch {
       rejectCode()
       return
@@ -171,6 +182,9 @@ export function ShareModal({ open, onClose, todos, onImport }: ShareModalProps) 
           )}
           <p className="modal__note">
             Open TodoHub on the other device and choose Receive a list.
+            {todos.some((todo) => todo.categoryId)
+              ? ' Categories travel with the tasks and are recreated there by name.'
+              : ''}
           </p>
           <Button variant="ghost" onClick={() => setMode('choose')}>
             <ArrowLeftIcon size={18} /> Back
@@ -224,6 +238,11 @@ export function ShareModal({ open, onClose, todos, onImport }: ShareModalProps) 
                   <span className="shared__text" dir="auto">
                     {todo.text}
                   </span>
+                  {todo.categoryName ? (
+                    <span className="badge badge--cat" dir="auto">
+                      {todo.categoryName}
+                    </span>
+                  ) : null}
                   {todo.subtasks.length > 0 ? (
                     <span className="badge badge--steps">{todo.subtasks.length} steps</span>
                   ) : null}
