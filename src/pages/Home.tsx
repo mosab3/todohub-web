@@ -106,20 +106,23 @@ export default function Home() {
     return true
   }
 
-  const renameCategory = (id: string, rawName: string) => {
+  // Returns false when the name was rejected, so the row can put the real name
+  // back in the field instead of leaving a name that was never applied.
+  const renameCategory = (id: string, rawName: string): boolean => {
     const name = cleanCategoryName(rawName)
     if (!name) {
       toast.error('A category cannot be empty.')
-      return
+      return false
     }
     const clash = findCategoryByName(categories, name)
     if (clash && clash.id !== id) {
       toast.error(`"${name}" already exists.`)
-      return
+      return false
     }
     setCategories((prev) =>
       prev.map((category) => (category.id === id ? { ...category, name } : category)),
     )
+    return true
   }
 
   const recolorCategory = (id: string, color: CategoryColor) => {

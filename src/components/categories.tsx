@@ -245,7 +245,7 @@ export function CategoryPicker({ todo, categories, onAssign }: CategoryPickerPro
 interface CategoryRowProps {
   category: Category
   taskCount: number
-  onRename: (id: string, name: string) => void
+  onRename: (id: string, name: string) => boolean
   onRecolor: (id: string, color: CategoryColor) => void
   onDelete: (id: string) => void
 }
@@ -253,15 +253,16 @@ interface CategoryRowProps {
 function CategoryRow({ category, taskCount, onRename, onRecolor, onDelete }: CategoryRowProps) {
   const [draft, setDraft] = useState(category.name)
 
-  // A rename rejected by the parent (empty or duplicate) leaves the field
-  // showing the typed value, so pull it back to the accepted name.
+  // An accepted rename changes category.name; a rejected one does not, so the
+  // field has to be pulled back explicitly or it keeps showing a name that was
+  // never applied.
   useEffect(() => {
     setDraft(category.name)
   }, [category.name])
 
   const commit = () => {
     if (draft.trim() === category.name) return
-    onRename(category.id, draft)
+    if (!onRename(category.id, draft)) setDraft(category.name)
   }
 
   return (
@@ -314,7 +315,7 @@ interface CategoryManagerProps {
   categories: Category[]
   todos: Todo[]
   onCreate: (name: string) => void
-  onRename: (id: string, name: string) => void
+  onRename: (id: string, name: string) => boolean
   onRecolor: (id: string, color: CategoryColor) => void
   onDelete: (id: string) => void
 }
