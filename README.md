@@ -27,7 +27,7 @@ TodoHub is a privacy-focused task management application built with **React** an
 ### Installation
 Clone the repository:
 ```bash
-git clone https://github.com/FlowApps-llc/todohub.git
+git clone https://github.com/mosab3/todohub-web.git
 cd todohub
 npm install
 ```
@@ -86,4 +86,4 @@ Contributions are welcome! Please follow these steps:
 This project is licensed under the MIT License.
 
 ## Contact
-For any questions or feedback, please reach out through the repository's [issues](https://github.com/FlowApps-llc/todohub/issues).
+For any questions or feedback, please reach out through the repository's [issues](https://github.com/mosab3/todohub-web/issues).
