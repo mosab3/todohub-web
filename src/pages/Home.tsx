@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   CategoryBar,
@@ -8,7 +8,6 @@ import {
 } from '@/components/categories'
 import { PlusIcon, ShareIcon } from '@/components/icons'
 import { CategorySection, TaskItem, TaskSection, type SubtaskControls } from '@/components/list'
-import { ShareModal } from '@/components/share'
 import {
   cleanCategoryName,
   createId,
@@ -28,6 +27,10 @@ import {
   type Todo,
 } from '@/components/todos'
 import { AppToaster, Button, EmptyState, Progress } from '@/components/ui'
+
+// The QR generator and camera scanner are most of the bundle and only needed
+// once Share is opened, so they load on demand.
+const ShareModal = lazy(() => import('@/components/share').then((m) => ({ default: m.ShareModal })))
 
 /** Duration of the row exit animation in globals.css (`task-out`). */
 const REMOVE_MS = 220
@@ -60,6 +63,13 @@ export default function Home() {
   const [removing, setRemoving] = useState<string[]>([])
 
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Autofocus only where a keyboard is likely. On touch devices it opens no
+  // keyboard anyway, and focusing during the first commit forces a reflow and
+  // starts the focus-ring transition before first paint.
+  useEffect(() => {
+    if (window.matchMedia('(pointer: fine)').matches) inputRef.current?.focus()
+  }, [])
 
   useEffect(() => {
     saveTodos(todos)
@@ -421,7 +431,6 @@ export default function Home() {
           className="composer__input"
           value={draft}
           dir="auto"
-          autoFocus
           placeholder={selectedCategory ? `Add to ${selectedCategory.name}…` : 'What needs doing?'}
           aria-label="New task"
           onChange={(event) => setDraft(event.target.value)}
@@ -429,7 +438,8 @@ export default function Home() {
             if (event.key === 'Enter') addTodo()
           }}
         />
-        <Button variant="ghost" onClick={() => setShareOpen(true)}>
+        {/* The label is hidden on narrow screens, so the name can't rely on it. */}
+        <Button variant="ghost" onClick={() => setShareOpen(true)} aria-label="Share">
           <ShareIcon size={18} />
           <span className="composer__label">Share</span>
         </Button>
@@ -509,13 +519,17 @@ export default function Home() {
         onDelete={deleteCategory}
       />
 
-      <ShareModal
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        todos={todos}
-        categories={categories}
-        onImport={importTodos}
-      />
+      {shareOpen && (
+        <Suspense fallback={null}>
+          <ShareModal
+            open
+            onClose={() => setShareOpen(false)}
+            todos={todos}
+            categories={categories}
+            onImport={importTodos}
+          />
+        </Suspense>
+      )}
     </>
   )
 }

@@ -39,14 +39,7 @@ export function ShareModal({ open, onClose, todos, categories, onImport }: Share
   // Rate-limits the "not a TodoHub code" toast - the camera decodes the same
   // stranger's QR code many times per second.
   const lastRejectAt = useRef(0)
-
-  // Reset the flow whenever the dialog closes.
-  useEffect(() => {
-    if (!open) {
-      setMode('choose')
-      setScanned([])
-    }
-  }, [open])
+  // No reset-on-close: Home unmounts this dialog when it closes, so each open starts fresh.
 
   const categoryName = (categoryId: string | null) =>
     categories.find((category) => category.id === categoryId)?.name

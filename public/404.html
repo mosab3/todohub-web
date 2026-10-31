@@ -9,12 +9,14 @@
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&display=swap"
-    />
+    <style>
+      @font-face {
+        font-family: 'Plus Jakarta Sans';
+        font-weight: 400 800;
+        font-display: swap;
+        src: url('/fonts/plus-jakarta-sans-v12-latin.woff2') format('woff2');
+      }
+    </style>
     <style>
       /* Self-contained: renders correctly with no JavaScript and no bundled CSS. */
       :root {
@@ -22,7 +24,7 @@
         --surface: #ffffff;
         --text: #0d0f14;
         --text-2: #4a5060;
-        --text-3: #717889;
+        --text-3: #636a7b;
         --border: #e3e6ef;
         --accent: #4f46e5;
         --accent-contrast: #ffffff;
@@ -39,7 +41,7 @@
           --surface: #12141b;
           --text: #f3f4f8;
           --text-2: #a8aebe;
-          --text-3: #7c8396;
+          --text-3: #8a91a4;
           --border: #242835;
           --accent: #7c83ff;
           --accent-contrast: #0b0d14;
